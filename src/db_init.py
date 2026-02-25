@@ -2,7 +2,9 @@ import psycopg2
 import json
 import os
 
-DB   = os.getenv("POSTGRES_DB")
+from psycopg2 import sql
+
+DB   = os.getenv("POSTGRES_DB") or "postgres"
 USER = os.getenv("POSTGRES_USER")
 PASS = os.getenv("POSTGRES_PASSWORD")
 HOST = os.getenv("POSTGRES_HOST")
@@ -97,4 +99,54 @@ with open('db_init.json') as file:
 
         conn.commit()
 
+RO_USER = os.getenv("POSTGRES_RO_USER") or "rouser"
+RO_PASS = os.getenv("POSTGRES_RO_PASSWORD")
+
+cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (RO_USER,))
+exists = cur.fetchone()
+if not exists:
+    cur.execute(
+        sql.SQL("CREATE USER {} WITH PASSWORD %s").format(
+            sql.Identifier(RO_USER)
+        ),
+        (RO_PASS,)
+    )
+
+cur.execute(
+    sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(
+        sql.Identifier(DB),
+        sql.Identifier(RO_USER)
+    )
+)
+
+# 3. Grant USAGE on the schema (usually 'public')
+cur.execute(
+    sql.SQL("GRANT USAGE ON SCHEMA public TO {}").format(
+        sql.Identifier(RO_USER)
+    )
+)
+
+# 4. Grant SELECT on all existing tables in the schema
+cur.execute(
+    sql.SQL("GRANT SELECT ON ALL TABLES IN SCHEMA public TO {}").format(
+        sql.Identifier(RO_USER)
+    )
+)
+
+# 5. Set default privileges for future tables created by any role
+#    (If you know which role will create tables, you can specify it with 'FOR USER')
+cur.execute(
+    sql.SQL("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO {}").format(
+        sql.Identifier(RO_USER)
+    )
+)
+
+# 6. (Optional) Force read-only transactions for this user
+cur.execute(
+    sql.SQL("ALTER USER {} SET default_transaction_read_only = on").format(
+        sql.Identifier(RO_USER)
+    )
+)
+
+conn.commit()
 conn.close()
