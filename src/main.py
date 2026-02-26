@@ -151,11 +151,13 @@ async def message_handler(message: Message) -> None:
         )
         response = client.chat(chat_payload).choices[0].message.content
         if response == "ERROR":
+            print(f"{message.text}\n{response}\nОшбика\n\n")
             await message.answer("Ошибка")
             return
 
         db_cur.execute(response)
         result = db_cur.fetchone() or ("Ошибка",)
+        print(f"{message.text}\n{response}\n{result}\n\n")
         await message.answer(str(result[0]))
 
 async def main():

@@ -5,9 +5,12 @@ import os
 from psycopg2 import sql
 
 DB   = os.getenv("POSTGRES_DB") or "postgres"
-USER = os.getenv("POSTGRES_USER")
-PASS = os.getenv("POSTGRES_PASSWORD")
+USER = os.getenv("POSTGRES_USER") or "admin"
+PASS = os.getenv("POSTGRES_PASSWORD") or "1234"
+RO_USER = os.getenv("POSTGRES_RO_USER") or "rouser"
+RO_PASS = os.getenv("POSTGRES_RO_PASSWORD") or "1234"
 HOST = os.getenv("POSTGRES_HOST")
+
 
 conn = psycopg2.connect(
     database=DB,
@@ -82,25 +85,22 @@ with open('db_init.json') as file:
                         delta_views_count, delta_likes_count, delta_comments_count, delta_reports_count, created_at, updated_at
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT DO NOTHING""", (
-                    snapshot['id'],
-                    snapshot['video_id'],
-                    snapshot['views_count'],
-                    snapshot['likes_count'],
-                    snapshot['comments_count'],
-                    snapshot['reports_count'],
-                    snapshot['delta_views_count'],
-                    snapshot['delta_likes_count'],
-                    snapshot['delta_comments_count'],
-                    snapshot['delta_reports_count'],
-                    snapshot['created_at'],
-                    snapshot['updated_at']
+                        snapshot['id'],
+                        snapshot['video_id'],
+                        snapshot['views_count'],
+                        snapshot['likes_count'],
+                        snapshot['comments_count'],
+                        snapshot['reports_count'],
+                        snapshot['delta_views_count'],
+                        snapshot['delta_likes_count'],
+                        snapshot['delta_comments_count'],
+                        snapshot['delta_reports_count'],
+                        snapshot['created_at'],
+                        snapshot['updated_at']
                     )
                 )
 
         conn.commit()
-
-RO_USER = os.getenv("POSTGRES_RO_USER") or "rouser"
-RO_PASS = os.getenv("POSTGRES_RO_PASSWORD")
 
 cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (RO_USER,))
 exists = cur.fetchone()
