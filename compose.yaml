@@ -42,7 +42,7 @@ services:
       - .env
     environment:
       POSTGRES_HOST: db
-    restart: on-failure
+    restart: unless-stopped
 
 volumes:
   pgdata:
