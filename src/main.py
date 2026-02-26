@@ -112,7 +112,6 @@ db_cur = db_conn.cursor()
 
 @tg_dp.message()
 async def message_handler(message: Message) -> None:
-    print("Received "+ (message.text or ''))
     async with GigaChat(credentials=AI_AUTH_KEY) as client:
         chat_payload = Chat(
             messages=[
@@ -120,8 +119,14 @@ async def message_handler(message: Message) -> None:
                 Messages(role=MessagesRole.USER, content=message.text),
             ]
         )
-        response = client.chat(chat_payload)
-        await message.answer(response.choices[0].message.content)
+        response = client.chat(chat_payload).choices[0].message.content
+        if response == "ERROR":
+            await message.answer("Ошибка")
+            return
+
+        db_cur.execute(response)
+        result = db_cur.fetchone() or ("Ошибка",)
+        await message.answer(str(result[0]))
 
 async def main():
     await tg_dp.start_polling(tg_bot)
