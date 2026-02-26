@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   db-init:
-    image: python:3.9-slim
+    image: python:3.11-slim
     container_name: db-init
     depends_on:
       db:
@@ -32,6 +32,17 @@ services:
     command: >
       sh -c "pip install psycopg2-binary && python db_init.py"
     restart: no
+
+  app:
+    image: video-storage-bot
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+    restart: on-failure
 
 volumes:
   pgdata:
