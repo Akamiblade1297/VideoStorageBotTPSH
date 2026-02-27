@@ -124,6 +124,9 @@ AI_SYSTEM_PROMPT = """
 
     Вопрос: Какой средний процент лайков к просмотрам на каждом видео?
     Ответ: SELECT AVG((likes_count::DECIMAL / views_count::DECIMAL) * 100) AS like_percentage FROM videos WHERE views_count != 0;
+
+    Вопрос: Какое суммарное количество просмотров набрали все видео, опубликованные в апреле 2025 года?
+    Ответ: SELECT SUM(views_count) FROM videos WHERE videos_created_at >= '2025-04-01' AND video_created_at < '2025-05-01'
 """
 
 BOT_API = os.getenv('BOT_API') or '';
